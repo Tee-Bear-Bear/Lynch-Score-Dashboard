@@ -6,14 +6,6 @@ const { default: yahooFinance } = require("yahoo-finance2");
 const app = express();
 app.use(cors());
 app.use(express.json());
-
-// --- ส่วนที่เพิ่มเข้าไปเพื่อแก้ปัญหาโดนบล็อก ---
-yahooFinance.setGlobalConfig({
-    queue: { concurrency: 2 },
-    validation: { logErrors: false }
-});
-// ---------------------------------------
-
 app.use(express.static(path.join(__dirname, "/")));
 app.get("/", (req, res) => { res.sendFile(path.join(__dirname, "Index_4.html")); });
 
