@@ -1,8 +1,8 @@
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
-// แก้ไขบรรทัดนี้เพื่อความชัวร์
-const yahooFinance = require("yahoo-finance2").default; 
+// แก้ไขบรรทัดนี้เป็นแบบนี้เท่านั้นครับ
+const { default: yahooFinance } = require("yahoo-finance2"); 
 
 const app = express();
 app.use(cors());
