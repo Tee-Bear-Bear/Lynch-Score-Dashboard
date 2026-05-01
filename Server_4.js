@@ -1,12 +1,13 @@
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
-const { YahooFinance } = require("yahoo-finance2");
-const yahooFinance = new YahooFinance();
+// เรียกใช้ Library รูปแบบดั้งเดิมที่เสถียรที่สุดสำหรับเวอร์ชัน 2
+const yahooFinance = require("yahoo-finance2").default; 
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
 app.use(express.static(path.join(__dirname, "/")));
 app.get("/", (req, res) => { res.sendFile(path.join(__dirname, "Index_4.html")); });
 
@@ -72,7 +73,7 @@ app.get("/api/stocks", async (req, res) => {
         if (is10x && !alertedStocks[key]) { alert = true; alertedStocks[key] = true; }
         results.push({ symbol: key, name: sum.price?.shortName || "-", price: sum.price?.regularMarketPrice || 0, ...analysis, is10x, alert });
       } catch (err) { 
-        console.error(`❌ Error fetching ${key}:`, err.message); // เพิ่ม Log เพื่อดูความผิดพลาด
+        console.error(`❌ Error fetching ${key}:`, err.message); 
         results.push({ symbol: key, error: true }); 
       }
     }
@@ -80,5 +81,5 @@ app.get("/api/stocks", async (req, res) => {
   } catch (err) { res.json([]); }
 });
 
-const PORT = process.env.PORT || 10000; // ปรับให้ตรงกับที่ Render ระบุใน Log
+const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => console.log(`🚀 Machine Running on Port ${PORT}`));
