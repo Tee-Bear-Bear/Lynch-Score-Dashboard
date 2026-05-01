@@ -1,12 +1,18 @@
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
-// แก้ไขบรรทัดนี้เป็นแบบนี้เท่านั้นครับ
-const { default: yahooFinance } = require("yahoo-finance2"); 
+const { default: yahooFinance } = require("yahoo-finance2");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// --- ส่วนที่เพิ่มเข้าไปเพื่อแก้ปัญหาโดนบล็อก ---
+yahooFinance.setGlobalConfig({
+    queue: { concurrency: 2 },
+    validation: { logErrors: false }
+});
+// ---------------------------------------
 
 app.use(express.static(path.join(__dirname, "/")));
 app.get("/", (req, res) => { res.sendFile(path.join(__dirname, "Index_4.html")); });
@@ -72,11 +78,14 @@ app.get("/api/stocks", async (req, res) => {
         let alert = false;
         if (is10x && !alertedStocks[key]) { alert = true; alertedStocks[key] = true; }
         results.push({ symbol: key, name: sum.price?.shortName || "-", price: sum.price?.regularMarketPrice || 0, ...analysis, is10x, alert });
-      } catch (err) { results.push({ symbol: key, error: true }); }
+      } catch (err) { 
+        console.error(`❌ Error fetching ${key}:`, err.message); // เพิ่ม Log เพื่อดูความผิดพลาด
+        results.push({ symbol: key, error: true }); 
+      }
     }
     res.json(results);
   } catch (err) { res.json([]); }
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000; // ปรับให้ตรงกับที่ Render ระบุใน Log
 app.listen(PORT, () => console.log(`🚀 Machine Running on Port ${PORT}`));
