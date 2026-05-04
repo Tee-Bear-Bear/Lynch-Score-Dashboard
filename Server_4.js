@@ -5,75 +5,56 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// 🔑 API Key ของพี่หมี
-const API_KEY = "SFtbTv6ztA9vxVnSxXvaHdMLDCWhxxn5";
-
-async function analyzeNewsSentiment(news) {
-    if (!news || !Array.isArray(news) || news.length === 0) return "Neutral";
-    const text = news.map(n => n.title).join(" ");
-    const positiveWords = ["upgrade", "buy", "growth", "positive", "bullish", "strong", "beat", "surge"];
-    const negativeWords = ["downgrade", "sell", "decline", "negative", "bearish", "weak", "miss", "drop"];
-    let score = 0;
-    positiveWords.forEach(word => { if (text.toLowerCase().includes(word)) score++; });
-    negativeWords.forEach(word => { if (text.toLowerCase().includes(word)) score--; });
-    return score > 0 ? "Positive" : score < 0 ? "Negative" : "Neutral";
-}
+// 🔑 API Key ของ Alpha Vantage ที่พี่หมีให้มาครับ
+const AV_API_KEY = "W643XQNUX3FLFOA4"; 
 
 app.get("/api/stocks", async (req, res) => {
-    const symbols = req.query.symbols ? req.query.symbols.split(",") : ["AAP", "LRCX", "CROX"];
+    const symbols = req.query.symbols ? req.query.symbols.split(",") : ["AAPL"];
     const results = [];
 
-    console.log(`🚀 พี่หมีครับ! เริ่มดึงข้อมูลระบบ Stable สำหรับ: ${symbols.join(", ")}`);
+    console.log(`📡 Alpha Vantage กำลังออกล่าหุ้นให้พี่หมี: ${symbols.join(", ")}`);
 
     for (const symbol of symbols) {
         const key = symbol.trim().toUpperCase();
         try {
-            // 🌐 ใช้ Stable Profile (ดึงชื่อ, ราคา, การเปลี่ยนแปลง)
-            const pRes = await fetch(`https://financialmodelingprep.com/stable/profile?symbol=${key}&apikey=${API_KEY}`);
-            const pData = await pRes.json();
+            // 1. ดึงราคาปัจจุบัน (Global Quote)
+            const quoteRes = await fetch(`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${key}&apikey=${AV_API_KEY}`);
+            const quoteData = await quoteRes.json();
+            const quote = quoteData["Global Quote"] || {};
 
-            // 🌐 ใช้ Stable Key Metrics (ดึง PE, EPS)
-            const mRes = await fetch(`https://financialmodelingprep.com/stable/key-metrics-ttm?symbol=${key}&apikey=${API_KEY}`);
-            const mData = await mRes.json();
+            // 2. ดึงข้อมูลพื้นฐาน (Company Overview) - แหล่งข้อมูล PE และ EPS ฟรี
+            const overviewRes = await fetch(`https://www.alphavantage.co/query?function=OVERVIEW&symbol=${key}&apikey=${AV_API_KEY}`);
+            const overview = await overviewRes.json();
 
-            const p = Array.isArray(pData) ? pData[0] : pData;
-            const m = Array.isArray(mData) ? mData[0] : mData;
-
-            if (!p || !p.symbol) {
-                console.warn(`⚠️ ไม่พบหุ้น: ${key}`);
+            // ตรวจสอบว่ามีข้อมูลส่งกลับมาหรือไม่
+            if (!overview.Symbol && !quote["01. symbol"]) {
+                console.warn(`⚠️ ไม่พบหุ้น ${key} หรือ API Limit เต็ม (ฟรี 25 ครั้ง/วัน)`);
                 continue;
             }
 
-            // ดึงข่าวสั้นๆ (ถ้าพังให้ข้ามไป ไม่ให้กระทบตัวเลขหลัก)
-            let sentiment = "Neutral";
-            try {
-                const nRes = await fetch(`https://financialmodelingprep.com/stable/stock_news?tickers=${key}&limit=3&apikey=${API_KEY}`);
-                const nData = await nRes.json();
-                sentiment = await analyzeNewsSentiment(nData);
-            } catch (e) { console.error("News Error:", e.message); }
-
-            // 📊 ส่งตัวเลขกลับไปเป็น Number เพื่อให้หน้าเว็บไม่งง
             results.push({
                 symbol: key,
-                name: p.name || p.companyName || key,
-                price: Number(p.price) || 0,
-                changesPercentage: Number(p.changesPercentage || p.changes) || 0,
-                pe: Number(m.peRatioTTM) || 0,
-                eps: Number(m.netIncomePerShareTTM) || 0,
-                marketCap: Number(p.mktCap || p.marketCap) || 0,
-                sentiment: sentiment,
-                lynchStatus: (m.peRatioTTM && m.peRatioTTM < 20) ? "⭐ Lynch Fit" : "Watchlist",
+                name: overview.Name || key,
+                price: parseFloat(quote["05. price"]) || 0,
+                changesPercentage: parseFloat(quote["10. change percent"]) || 0,
+                pe: overview.PERatio !== "None" && overview.PERatio ? parseFloat(overview.PERatio).toFixed(2) : "N/A",
+                eps: overview.EPS !== "None" && overview.EPS ? parseFloat(overview.EPS).toFixed(2) : "N/A",
+                marketCap: parseInt(overview.MarketCapitalization) || 0,
+                sentiment: "Neutral", 
+                lynchStatus: (parseFloat(overview.PERatio) < 20) ? "⭐ Lynch Fit" : "Watchlist",
                 timestamp: new Date().toLocaleTimeString()
             });
 
-            console.log(`✅ ${key} ข้อมูลมาครบแล้วครับพี่หมี!`);
+            console.log(`✅ ${key} ดึงข้อมูลงบการเงินสำเร็จ!`);
 
+            // 💡 ทริค: Alpha Vantage ตัวฟรีจำกัด 5 ครั้งต่อนาที 
+            // หากดึงหลายตัวพร้อมกัน อาจต้องรอสักครู่ครับ
+            
         } catch (error) {
-            console.error(`💥 หุ้น ${key} มีปัญหา:`, error.message);
+            console.error(`💥 พังที่หุ้น ${key}:`, error.message);
         }
     }
 
-    // 🎁 ห่อข้อมูลเป็น Object (แก้ไขจุดที่ไม่สอดคล้องกัน)
     res.json({
         success: true,
         stocks: results
