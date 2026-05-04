@@ -6,7 +6,7 @@ app.use(cors());
 app.use(express.json());
 
 // 🔑 API Key ของคุณ
-const API_KEY = "SFtbTv6ztA9vxVnSxXvaHdMLLtCWhxxn5";
+const API_KEY = "SFtbTv6ztA9vxVnSxXvaHdMLDCWhxxn5";
 
 let alertedStocks = {};
 setInterval(() => { alertedStocks = {}; }, 1000 * 60 * 60 * 24);
