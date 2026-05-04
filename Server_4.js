@@ -1,15 +1,10 @@
 const express = require("express");
 const cors = require("cors");
-const path = require("path");
-// เรียกใช้ Library รูปแบบดั้งเดิมที่เสถียรที่สุดสำหรับเวอร์ชัน 2
 const yahooFinance = require("yahoo-finance2").default; 
 
 const app = express();
 app.use(cors());
 app.use(express.json());
-
-app.use(express.static(path.join(__dirname, "/")));
-app.get("/", (req, res) => { res.sendFile(path.join(__dirname, "Index_4.html")); });
 
 let alertedStocks = {};
 setInterval(() => { alertedStocks = {}; }, 1000 * 60 * 60 * 24);
@@ -81,5 +76,5 @@ app.get("/api/stocks", async (req, res) => {
   } catch (err) { res.json([]); }
 });
 
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log(`🚀 Machine Running on Port ${PORT}`));
+// 💡 สิ่งที่เปลี่ยนไป: ส่งออกแอพแทนการใช้ app.listen
+module.exports = app;
