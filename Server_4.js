@@ -23,58 +23,61 @@ app.get("/api/stocks", async (req, res) => {
     const symbols = req.query.symbols ? req.query.symbols.split(",") : ["AAP", "LRCX", "CROX"];
     const results = [];
 
+    console.log(`🚀 พี่หมีครับ! เริ่มดึงข้อมูลระบบ Stable สำหรับ: ${symbols.join(", ")}`);
+
     for (const symbol of symbols) {
         const key = symbol.trim().toUpperCase();
         try {
-            console.log(`📡 กำลังดึงข้อมูล ${key} ผ่านท่อ Stable...`);
-            
-            // 🚀 ใช้ท่อ Stable Profile (เพื่อชื่อและราคา)
-            const profileUrl = `https://financialmodelingprep.com/stable/profile?symbol=${key}&apikey=${API_KEY}`;
-            const profileRes = await fetch(profileUrl);
-            const profileData = await profileRes.json();
+            // 🌐 ใช้ Stable Profile (ดึงชื่อ, ราคา, การเปลี่ยนแปลง)
+            const pRes = await fetch(`https://financialmodelingprep.com/stable/profile?symbol=${key}&apikey=${API_KEY}`);
+            const pData = await pRes.json();
 
-            // 🚀 ใช้ท่อ Stable Metrics (เพื่อ PE และ EPS)
-            const metricsUrl = `https://financialmodelingprep.com/stable/key-metrics-ttm?symbol=${key}&apikey=${API_KEY}`;
-            const metricsRes = await fetch(metricsUrl);
-            const metricsData = await metricsRes.json();
+            // 🌐 ใช้ Stable Key Metrics (ดึง PE, EPS)
+            const mRes = await fetch(`https://financialmodelingprep.com/stable/key-metrics-ttm?symbol=${key}&apikey=${API_KEY}`);
+            const mData = await mRes.json();
 
-            const p = Array.isArray(profileData) ? profileData[0] : profileData;
-            const m = Array.isArray(metricsData) ? metricsData[0] : metricsData;
+            const p = Array.isArray(pData) ? pData[0] : pData;
+            const m = Array.isArray(mData) ? mData[0] : mData;
 
-            // ถ้าไม่มีข้อมูลพื้นฐาน ให้ข้ามไป
             if (!p || !p.symbol) {
-                console.warn(`⚠️ ไม่พบข้อมูลหุ้น: ${key}`);
-                results.push({ symbol: key, error: true });
+                console.warn(`⚠️ ไม่พบหุ้น: ${key}`);
                 continue;
             }
 
-            // ดึงข่าวผ่านท่อ Stable
-            const newsUrl = `https://financialmodelingprep.com/stable/stock_news?tickers=${key}&limit=3&apikey=${API_KEY}`;
-            const newsRes = await fetch(newsUrl);
-            const newsData = await newsRes.json();
-            const sentiment = await analyzeNewsSentiment(newsData);
+            // ดึงข่าวสั้นๆ (ถ้าพังให้ข้ามไป ไม่ให้กระทบตัวเลขหลัก)
+            let sentiment = "Neutral";
+            try {
+                const nRes = await fetch(`https://financialmodelingprep.com/stable/stock_news?tickers=${key}&limit=3&apikey=${API_KEY}`);
+                const nData = await nRes.json();
+                sentiment = await analyzeNewsSentiment(nData);
+            } catch (e) { console.error("News Error:", e.message); }
 
+            // 📊 ส่งตัวเลขกลับไปเป็น Number เพื่อให้หน้าเว็บไม่งง
             results.push({
                 symbol: key,
                 name: p.name || p.companyName || key,
-                price: p.price,
-                changesPercentage: p.changesPercentage || p.changes,
-                pe: m.peRatioTTM ? Number(m.peRatioTTM).toFixed(2) : "N/A",
-                eps: m.netIncomePerShareTTM ? Number(m.netIncomePerShareTTM).toFixed(2) : "N/A",
-                marketCap: p.mktCap || p.marketCap,
+                price: Number(p.price) || 0,
+                changesPercentage: Number(p.changesPercentage || p.changes) || 0,
+                pe: Number(m.peRatioTTM) || 0,
+                eps: Number(m.netIncomePerShareTTM) || 0,
+                marketCap: Number(p.mktCap || p.marketCap) || 0,
                 sentiment: sentiment,
                 lynchStatus: (m.peRatioTTM && m.peRatioTTM < 20) ? "⭐ Lynch Fit" : "Watchlist",
                 timestamp: new Date().toLocaleTimeString()
             });
 
-            console.log(`✅ ${key} เรียบร้อย!`);
+            console.log(`✅ ${key} ข้อมูลมาครบแล้วครับพี่หมี!`);
 
         } catch (error) {
-            console.error(`💥 พังที่หุ้น ${key}:`, error.message);
-            results.push({ symbol: key, error: true });
+            console.error(`💥 หุ้น ${key} มีปัญหา:`, error.message);
         }
     }
-    res.json(results);
+
+    // 🎁 ห่อข้อมูลเป็น Object (แก้ไขจุดที่ไม่สอดคล้องกัน)
+    res.json({
+        success: true,
+        stocks: results
+    });
 });
 
 module.exports = app;
