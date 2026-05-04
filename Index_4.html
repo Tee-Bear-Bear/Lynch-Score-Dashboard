@@ -2,40 +2,47 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <title>Lynch Hunter Pro</title>
+  <title>Lynch Hunter Pro 🐻</title>
   <style>
     body { font-family: 'Segoe UI', sans-serif; background-color: #0b1421; color: #fff; margin: 0; padding: 20px; }
     .container { max-width: 1200px; margin: 0 auto; }
     header { text-align: center; margin-bottom: 30px; }
-    h1 { color: #facc15; font-size: 2.2em; margin: 0; }
+    h1 { color: #facc15; font-size: 2.2em; margin: 0; display: flex; align-items: center; justify-content: center; gap: 15px; }
+    
+    /* สไตล์สำหรับ Mascot น้องหมี */
+    .mascot-img { width: 60px; height: 60px; border-radius: 12px; border: 2px solid #facc15; box-shadow: 0 0 15px rgba(250, 204, 21, 0.3); }
+    
     .search-box { text-align: center; margin-bottom: 30px; }
     input { padding: 12px; width: 350px; border-radius: 6px; border: 1px solid #1e293b; background: #16202c; color: #fff; outline: none; }
     input:focus { border-color: #facc15; }
     button { padding: 12px 24px; background: #facc15; color: #000; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; transition: 0.3s; }
     button:hover { background: #eab308; }
     button:disabled { background: #475569; cursor: not-allowed; }
+    
     table { width: 100%; border-collapse: collapse; background: #0f1a2a; border-radius: 12px; overflow: hidden; margin-top: 20px; }
     th { background: #16202c; padding: 15px; text-align: left; color: #94a3b8; font-size: 0.8em; text-transform: uppercase; border-bottom: 2px solid #1e293b; cursor: pointer; }
     td { padding: 15px; border-bottom: 1px solid #1e293b; vertical-align: middle; }
+    
     .actual-value { font-size: 1.2em; font-weight: bold; color: #38bdf8; display: block; }
-    .status-sub { font-size: 0.85em; font-weight: bold; margin-top: 4px; display: block; }
-    .type-pill { padding: 3px 10px; border-radius: 20px; font-size: 0.75em; border: 1px solid #38bdf8; color: #38bdf8; white-space: nowrap; }
-    .sentiment-positive { color: #4ade80; }
-    .sentiment-negative { color: #f87171; }
-    .sentiment-neutral { color: #94a3b8; }
+    .lynch-fit { color: #facc15; font-weight: bold; }
     .no-data { text-align: center; padding: 40px; color: #94a3b8; font-style: italic; }
+    .error-text { color: #f87171; font-weight: bold; }
   </style>
 </head>
 <body onload="checkWatchlist()">
 
 <div class="container">
   <header>
-    <h1>STOCK DASHBOARD PRO ( Lynch Score )</h1>
-    <p style="color: #94a3b8; font-size: 0.9em;">Fundamental Analysis Engine | Stable Endpoint System 2026</p>
+    <h1>
+      <!-- 🐻 ใส่ลิงก์รูปภาพ Mascot ที่พี่หมีฝากรูปไว้ตรง src นะครับ -->
+      <img src="https://via.placeholder.com/60" alt="Mascot" class="mascot-img" id="bear-logo">
+      LYNCH HUNTER PRO
+    </h1>
+    <p style="color: #94a3b8; font-size: 0.9em; margin-top: 10px;">Fundamental Analysis Engine | Powered by Alpha Vantage API</p>
   </header>
 
   <div class="search-box">
-    <input id="symbol" placeholder="ชื่อหุ้น เช่น AAP, LRCX, CROX">
+    <input id="symbol" placeholder="พิมพ์ชื่อหุ้น เช่น AAPL, MSFT (แยกด้วยลูกศร)">
     <button id="btn-load" onclick="load()">วิเคราะห์ & ตรวจจับ 10X</button>
   </div>
 
@@ -46,23 +53,24 @@
         <th onclick="sortTable('price')">💰 ราคา ↕</th>
         <th onclick="sortTable('pe')">📈 P/E ↕</th>
         <th onclick="sortTable('eps')">📊 EPS ↕</th>
-        <th onclick="sortTable('sentiment')">📰 ข่าว ↕</th>
         <th onclick="sortTable('lynchStatus')">⭐ LYNCH FIT ↕</th>
       </tr>
     </thead>
     <tbody id="result-body">
-        <tr><td colspan="6" class="no-data">พิมพ์ชื่อหุ้นด้านบนแล้วกดปุ่มเพื่อเริ่มวิเคราะห์</td></tr>
+        <tr><td colspan="5" class="no-data">พิมพ์ชื่อหุ้นด้านบนแล้วกดปุ่มเพื่อเริ่มล่าหุ้น 10X</td></tr>
     </tbody>
   </table>
 
-  <div class="footer-legend" style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #1e293b; text-align: center; color: #94a3b8; font-size: 0.8em;">
-    <p>ระบบใช้ข้อมูล Stable Endpoint จาก Financial Modeling Prep (FMP) รองรับบัญชีสมัครใหม่ปี 2026</p>
+  <div style="margin-top: 40px; padding: 20px; background: rgba(30, 41, 59, 0.5); border-radius: 10px; font-size: 0.85em; color: #94a3b8;">
+    <strong>💡 หมายเหตุสำหรับสายฟรี:</strong><br>
+    ระบบเชื่อมต่อกับ Alpha Vantage API (โควต้าฟรี 25 ครั้ง/วัน, 5 ครั้ง/นาที) หากข้อมูลไม่ขึ้นกรุณารอสักครู่แล้วลองใหม่ครับ
   </div>
 </div>
 
 <script>
 let currentData = [];
 
+// ฟังก์ชันโหลดข้อมูลจาก Watchlist เดิม
 function checkWatchlist() {
   const saved = localStorage.getItem('lynch_watchlist');
   if(saved) {
@@ -77,7 +85,7 @@ async function load() {
   if(!s) return;
 
   btn.disabled = true;
-  btn.innerText = "กำลังดึงข้อมูล...";
+  btn.innerText = "กำลังคำนวณงบ...";
   localStorage.setItem('lynch_watchlist', s);
 
   try {
@@ -86,17 +94,23 @@ async function load() {
     
     const result = await res.json();
     
-    // 💡 แก้ไขจุดสำคัญ: เข้าไปหยิบอาเรย์ stocks จากในกล่องที่เซิร์ฟเวอร์ส่งมา
+    // ✅ แกะข้อมูลจากกล่อง stocks ที่ส่งมาจาก Server_4.js
     currentData = result.stocks || [];
     
     if (currentData.length === 0) {
-        document.getElementById("result-body").innerHTML = `<tr><td colspan="6" class="no-data">ไม่พบข้อมูลหุ้น หรือ API จำกัดการเข้าถึง (เช็ค Logs ใน Vercel)</td></tr>`;
+        document.getElementById("result-body").innerHTML = `
+            <tr>
+                <td colspan="5" class="no-data error-text">
+                    ⚠️ ไม่พบข้อมูล หรือโควต้า API เต็มแล้ว (25 ครั้ง/วัน)<br>
+                    <small style="color: #94a3b8;">ลองตรวจสอบชื่อหุ้น หรือรอสักครู่แล้วกดใหม่ครับ</small>
+                </td>
+            </tr>`;
     } else {
         renderTable(currentData);
     }
   } catch (err) {
     console.error(err);
-    document.getElementById("result-body").innerHTML = `<tr><td colspan="6" class="no-data" style="color:#f87171;">เกิดข้อผิดพลาดในการเชื่อมต่อ (ตรวจพบความไม่สอดคล้องของข้อมูล)</td></tr>`;
+    document.getElementById("result-body").innerHTML = `<tr><td colspan="5" class="no-data error-text">เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์</td></tr>`;
   } finally {
     btn.disabled = false;
     btn.innerText = "วิเคราะห์ & ตรวจจับ 10X";
@@ -106,21 +120,18 @@ async function load() {
 function renderTable(data) {
   let html = "";
   data.forEach(stock => {
-    const sentimentClass = `sentiment-${stock.sentiment.toLowerCase()}`;
-    
     html += `
       <tr>
         <td>
           <div style="font-weight:bold; font-size:1.1em;">${stock.symbol}</div>
           <div style="font-size:0.7em; color:#94a3b8;">${stock.name}</div>
         </td>
-        <td style="font-weight:bold;">$${stock.price ? stock.price.toFixed(2) : '0.00'}</td>
+        <td style="font-weight:bold;">$${stock.price.toFixed(2)}</td>
         <td><span class="actual-value">${stock.pe}</span></td>
         <td><span class="actual-value">${stock.eps}</span></td>
-        <td><span class="${sentimentClass}">● ${stock.sentiment}</span></td>
         <td>
-          <div style="font-weight:bold; color:#facc15;">${stock.lynchStatus}</div>
-          <div style="font-size:0.7em; color:#94a3b8;">${stock.timestamp}</div>
+          <div class="lynch-fit">${stock.lynchStatus}</div>
+          <div style="font-size:0.7em; color:#94a3b8;">อัปเดต: ${stock.timestamp}</div>
         </td>
       </tr>
     `;
