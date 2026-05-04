@@ -17,17 +17,12 @@
     table { width: 100%; border-collapse: collapse; background: #0f1a2a; border-radius: 12px; overflow: hidden; margin-top: 20px; }
     th { background: #16202c; padding: 15px; text-align: left; color: #94a3b8; font-size: 0.8em; text-transform: uppercase; border-bottom: 2px solid #1e293b; cursor: pointer; }
     td { padding: 15px; border-bottom: 1px solid #1e293b; vertical-align: middle; }
-    .row-10x { background: linear-gradient(90deg, rgba(250, 204, 21, 0.08) 0%, rgba(15, 26, 42, 1) 100%) !important; border-left: 4px solid #facc15; }
-    .actual-value { font-size: 1.3em; font-weight: bold; color: #38bdf8; display: block; }
+    .actual-value { font-size: 1.2em; font-weight: bold; color: #38bdf8; display: block; }
     .status-sub { font-size: 0.85em; font-weight: bold; margin-top: 4px; display: block; }
     .type-pill { padding: 3px 10px; border-radius: 20px; font-size: 0.75em; border: 1px solid #38bdf8; color: #38bdf8; white-space: nowrap; }
-    .stars { color: #facc15; font-size: 1.1em; }
-    .footer-legend { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 40px; padding-top: 30px; border-top: 1px solid #1e293b; }
-    .legend-box h4 { margin: 0 0 12px 0; color: #94a3b8; font-size: 0.8em; text-transform: uppercase; }
-    .legend-item { display: flex; align-items: center; font-size: 0.8em; margin-bottom: 6px; color: #cbd5e1; line-height: 1.4; }
-    .dot { height: 8px; width: 8px; border-radius: 50%; display: inline-block; margin-right: 8px; }
-    .quote-box { background: rgba(15, 26, 42, 0.6); padding: 20px; border-radius: 10px; border-left: 4px solid #facc15; }
-    .trap-warning { color: #f87171; font-size: 11px; font-weight: bold; display: block; margin-top: 4px; }
+    .sentiment-positive { color: #4ade80; }
+    .sentiment-negative { color: #f87171; }
+    .sentiment-neutral { color: #94a3b8; }
     .no-data { text-align: center; padding: 40px; color: #94a3b8; font-style: italic; }
   </style>
 </head>
@@ -36,11 +31,11 @@
 <div class="container">
   <header>
     <h1>STOCK DASHBOARD PRO ( Lynch Score )</h1>
-    <p style="color: #94a3b8; font-size: 0.9em;">Fundamental Analysis Engine | Peter Lynch Methodology</p>
+    <p style="color: #94a3b8; font-size: 0.9em;">Fundamental Analysis Engine | Stable Endpoint System 2026</p>
   </header>
 
   <div class="search-box">
-    <input id="symbol" placeholder="ชื่อหุ้น เช่น AAPL, MSFT, NVDA">
+    <input id="symbol" placeholder="ชื่อหุ้น เช่น AAP, LRCX, CROX">
     <button id="btn-load" onclick="load()">วิเคราะห์ & ตรวจจับ 10X</button>
   </div>
 
@@ -48,42 +43,20 @@
     <thead>
       <tr>
         <th onclick="sortTable('symbol')">หุ้น ↕</th>
-        <th onclick="sortTable('type')">ประเภท ↕</th>
         <th onclick="sortTable('price')">💰 ราคา ↕</th>
-        <th onclick="sortTable('growth.raw')">📈 Growth ↕</th>
-        <th onclick="sortTable('pegData.raw')">⚖️ PEG ↕</th>
-        <th onclick="sortTable('debtData.raw')">🏦 Debt ↕</th>
-        <th onclick="sortTable('profit.raw')">💎 Margin ↕</th>
-        <th onclick="sortTable('totalScore')">⭐ LYNCH FIT ↕</th>
+        <th onclick="sortTable('pe')">📈 P/E ↕</th>
+        <th onclick="sortTable('eps')">📊 EPS ↕</th>
+        <th onclick="sortTable('sentiment')">📰 ข่าว ↕</th>
+        <th onclick="sortTable('lynchStatus')">⭐ LYNCH FIT ↕</th>
       </tr>
     </thead>
     <tbody id="result-body">
-        <tr><td colspan="8" class="no-data">พิมพ์ชื่อหุ้นด้านบนแล้วกดปุ่มเพื่อเริ่มวิเคราะห์</td></tr>
+        <tr><td colspan="6" class="no-data">พิมพ์ชื่อหุ้นด้านบนแล้วกดปุ่มเพื่อเริ่มวิเคราะห์</td></tr>
     </tbody>
   </table>
 
-  <div class="footer-legend">
-    <div class="legend-box">
-      <h4>GROWTH (EPS)</h4>
-      <div class="legend-item"><span class="dot" style="background:#4ade80"></span> สูงมาก: >25%</div>
-      <div class="legend-item"><span class="dot" style="background:#fbbf24"></span> สูง: 15-25%</div>
-    </div>
-    <div class="legend-box">
-      <h4>ประเภทหุ้น (LYNCH)</h4>
-      <div class="legend-item">🚀 <b>Fast Grower:</b> โตแรง 20%+</div>
-      <div class="legend-item">🛡️ <b>Stalwart:</b> โตสม่ำเสมอ 10-12%</div>
-      <div class="legend-item">🔄 <b>Cyclical:</b> หุ้นวัฏจักรตามเศรษฐกิจ</div>
-    </div>
-    <div class="legend-box">
-      <h4>SCORE SYSTEM</h4>
-      <div class="legend-item">● Lynch (5): พื้นฐานตัวเลข</div>
-      <div class="legend-item">● Story (5): คุณภาพธุรกิจ</div>
-      <div class="legend-item">● 10X Alert: คะแนน 9.0+</div>
-    </div>
-    <div class="quote-box">
-      <span>"จงลงทุนในสิ่งที่คุณเข้าใจ และในบริษัทที่ราคายังไม่สะท้อนคุณค่าที่แท้จริง"</span>
-      <strong style="display:block; margin-top:10px; color:#facc15;">- Peter Lynch</strong>
-    </div>
+  <div class="footer-legend" style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #1e293b; text-align: center; color: #94a3b8; font-size: 0.8em;">
+    <p>ระบบใช้ข้อมูล Stable Endpoint จาก Financial Modeling Prep (FMP) รองรับบัญชีสมัครใหม่ปี 2026</p>
   </div>
 </div>
 
@@ -94,18 +67,8 @@ function checkWatchlist() {
   const saved = localStorage.getItem('lynch_watchlist');
   if(saved) {
       document.getElementById('symbol').value = saved;
-      load(); // โหลดข้อมูลล่าสุดทันทีที่เปิดเว็บ
+      load();
   }
-}
-
-function renderStars(n) {
-  let s = "";
-  for(let i=1; i<=5; i++) {
-    if(n >= i) s += "★";
-    else if(n >= i-0.5) s += "⯨";
-    else s += "☆";
-  }
-  return `<span class="stars">${s}</span>`;
 }
 
 async function load() {
@@ -114,22 +77,26 @@ async function load() {
   if(!s) return;
 
   btn.disabled = true;
-  btn.innerText = "กำลังคำนวณ...";
+  btn.innerText = "กำลังดึงข้อมูล...";
   localStorage.setItem('lynch_watchlist', s);
 
   try {
     const res = await fetch("/api/stocks?symbols=" + s);
     if (!res.ok) throw new Error("Server Error");
     
-    currentData = await res.json();
+    const result = await res.json();
+    
+    // 💡 แก้ไขจุดสำคัญ: เข้าไปหยิบอาเรย์ stocks จากในกล่องที่เซิร์ฟเวอร์ส่งมา
+    currentData = result.stocks || [];
+    
     if (currentData.length === 0) {
-        document.getElementById("result-body").innerHTML = `<tr><td colspan="8" class="no-data">ไม่พบข้อมูลหุ้นที่ระบุ หรือ Yahoo Finance กำลังปิดกั้นการเข้าถึง</td></tr>`;
+        document.getElementById("result-body").innerHTML = `<tr><td colspan="6" class="no-data">ไม่พบข้อมูลหุ้น หรือ API จำกัดการเข้าถึง (เช็ค Logs ใน Vercel)</td></tr>`;
     } else {
         renderTable(currentData);
     }
   } catch (err) {
     console.error(err);
-    document.getElementById("result-body").innerHTML = `<tr><td colspan="8" class="no-data" style="color:#f87171;">เกิดข้อผิดพลาดในการเชื่อมต่อ (อาจเป็นเพราะ IP ของ Server ถูกจำกัด)</td></tr>`;
+    document.getElementById("result-body").innerHTML = `<tr><td colspan="6" class="no-data" style="color:#f87171;">เกิดข้อผิดพลาดในการเชื่อมต่อ (ตรวจพบความไม่สอดคล้องของข้อมูล)</td></tr>`;
   } finally {
     btn.disabled = false;
     btn.innerText = "วิเคราะห์ & ตรวจจับ 10X";
@@ -139,40 +106,21 @@ async function load() {
 function renderTable(data) {
   let html = "";
   data.forEach(stock => {
-    if(stock.error) {
-        html += `<tr><td colspan="8" class="no-data" style="color:#f87171;">❌ ไม่สามารถดึงข้อมูลหุ้น ${stock.symbol} ได้ในขณะนี้</td></tr>`;
-        return;
-    }
-    if(stock.alert) alert("🔥 10X ALERT: " + stock.symbol + " คะแนน " + stock.totalScore + " สูงมาก!");
-
-    const formatCell = (metric, title) => {
-      if (metric.val === "N/A") {
-        return `<td title="${title}"><span class="actual-value" style="color:#475569;">N/A</span></td>`;
-      }
-      return `<td title="${title}"><span class="actual-value">${metric.val}</span><span class="status-sub" style="color:${metric.color}">● ${metric.status}</span></td>`;
-    };
-
+    const sentimentClass = `sentiment-${stock.sentiment.toLowerCase()}`;
+    
     html += `
-      <tr class="${stock.is10x ? 'row-10x' : ''}">
+      <tr>
         <td>
-          <div style="font-weight:bold; font-size:1.1em;">${stock.symbol}${stock.is10x ? `<span style="background:#facc15; color:#000; font-size:10px; padding:2px 5px; border-radius:3px; margin-left:5px;">10X</span>` : ''}</div>
+          <div style="font-weight:bold; font-size:1.1em;">${stock.symbol}</div>
           <div style="font-size:0.7em; color:#94a3b8;">${stock.name}</div>
-          ${stock.isValueTrap ? `<span class="trap-warning">⚠️ ${stock.trapReason}</span>` : ""}
         </td>
-        <td><span class="type-pill">${stock.type}</span></td>
-        <td style="font-weight:bold;">$${stock.price.toFixed(2)}</td>
-        ${formatCell(stock.growth, "อัตราการเติบโตกำไร")}
-        ${formatCell(stock.pegData, "PEG Ratio")}
-        ${formatCell(stock.debtData, "หนี้เทียบทุน")}
-        ${formatCell(stock.profit, "อัตรากำไรสุทธิ")}
+        <td style="font-weight:bold;">$${stock.price ? stock.price.toFixed(2) : '0.00'}</td>
+        <td><span class="actual-value">${stock.pe}</span></td>
+        <td><span class="actual-value">${stock.eps}</span></td>
+        <td><span class="${sentimentClass}">● ${stock.sentiment}</span></td>
         <td>
-          <div title="คะแนนความเหมาะสม (5 ดาว)">${renderStars(stock.totalScore / 2)}</div>
-          <div style="font-size: 1.1em; font-weight: bold; color: #facc15; margin-top: 3px;">
-            ${stock.totalScore.toFixed(1)}/10
-          </div>
-          <div style="font-size: 0.65em; color: #94a3b8;">
-            งบ: ${stock.lynchScore.toFixed(1)} | ธุรกิจ: ${stock.storyScore.toFixed(1)}
-          </div>
+          <div style="font-weight:bold; color:#facc15;">${stock.lynchStatus}</div>
+          <div style="font-size:0.7em; color:#94a3b8;">${stock.timestamp}</div>
         </td>
       </tr>
     `;
@@ -181,12 +129,10 @@ function renderTable(data) {
 }
 
 function sortTable(p) {
-  const getV = (o, p) => p.split('.').reduce((a, b) => (a ? a[b] : 0), o);
   currentData.sort((a, b) => {
-    let valA = getV(a, p); let valB = getV(b, p);
-    if (valA === null || valA === "N/A") return 1;
-    if (valB === null || valB === "N/A") return -1;
-    return valB - valA;
+    let valA = a[p]; let valB = b[p];
+    if (typeof valA === 'string') return valA.localeCompare(valB);
+    return (valB || 0) - (valA || 0);
   });
   renderTable(currentData);
 }
